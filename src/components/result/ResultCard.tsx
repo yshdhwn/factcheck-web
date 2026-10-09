@@ -2,6 +2,7 @@ import type { FactCheckResult } from '../../types/factCheck';
 import { VerdictStamp } from '../common/VerdictStamp';
 import { ConfidenceScore } from './ConfidenceScore';
 import { DetectionDetails } from './DetectionDetails';
+import { ReasonsBreakdown } from './ReasonBreakdown';
 
 export function ResultCard({ result, onNewCheck }: { result: FactCheckResult; onNewCheck: () => void }) {
   return (
@@ -13,7 +14,8 @@ export function ResultCard({ result, onNewCheck }: { result: FactCheckResult; on
         <p className="result__claim">{result.claim}</p>
         <p className="result__summary">{result.summary}</p>
         <ConfidenceScore confidence={result.confidence} verdict={result.verdict} />
-        <DetectionDetails sources={result.sources} />
+        <ReasonsBreakdown reasons={result.reasons} limitations={result.limitations} isSample={result.isSample} />
+        {result.sources.length > 0 && <DetectionDetails sources={result.sources} />}
         <button
           type="button"
           className="btn-analyze"

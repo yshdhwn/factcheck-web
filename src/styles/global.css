@@ -568,3 +568,19 @@ footer.site-footer {
   font-size: 12px;
   color: var(--slate-600);
 }
+
+.reasons { margin-top: 24px; }
+.reasons__list { list-style: decimal; margin: 0; padding-left: 22px; }
+.reason { padding: 10px 0; border-bottom: 1px dashed var(--manila-edge); }
+.reason:last-child { border-bottom: 0; }
+.reason__head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.reason__title { font-weight: 600; }
+.reason__stance {
+  font-family: var(--font-mono); font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.04em; white-space: nowrap;
+}
+.reason__stance--indicates_fake { color: var(--stamp-red); }
+.reason__stance--indicates_authentic { color: var(--stamp-teal); }
+.reason__stance--inconclusive { color: var(--slate-600); }
+.reason__detail { margin: 4px 0 0; font-size: 14px; line-height: 1.5; color: var(--slate-800); }
+.reasons__limits { margin: 12px 0 0; font-size: 12.5px; font-style: italic; color: var(--slate-600); }

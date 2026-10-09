@@ -17,8 +17,16 @@ export interface PipelineStep {
 export interface EvidenceSource {
   name: string;
   url: string;
-  credibility: number; 
+  credibility: number; // 0–1
   stance: 'supports' | 'contradicts' | 'neutral';
+}
+
+export type ReasonStance = 'indicates_fake' | 'indicates_authentic' | 'inconclusive';
+
+export interface ReasonPoint {
+  title: string; 
+  detail: string; 
+  stance: ReasonStance;
 }
 
 export interface FactCheckResult {
@@ -29,6 +37,9 @@ export interface FactCheckResult {
   verdict: Verdict;
   confidence: number; // 0–100
   summary: string;
+  reasons: ReasonPoint[]; 
+  limitations?: string; 
+  isSample?: boolean; 
   sources: EvidenceSource[];
   createdAt: string;
 }

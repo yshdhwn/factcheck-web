@@ -1,7 +1,9 @@
 import type { ContentType, FactCheckResult, HistoryEntry, PipelineStep, Verdict } from '../types/factCheck';
 
+
 const API_BASE = import.meta.env.VITE_FACTCHECK_API ?? '/api/factcheck';
 const USE_MOCK = true; 
+const USE_REAL_IMAGE = import.meta.env.VITE_REAL_IMAGE_API === 'true';
 
 export const PIPELINE_STEPS: Omit<PipelineStep, 'status'>[] = [
   { id: 'extract', label: 'Claim Extractor', description: 'Identifying the core factual claim' },
@@ -59,6 +61,14 @@ async function runMockPipeline(
     verdict,
     confidence,
     summary: summaries[verdict],
+    isSample: true,
+    reasons: [
+      {
+        title: 'Sample data',
+        detail: 'This result comes from the demo pipeline. The verdict and reasons are placeholders, not an analysis of your file.',
+        stance: 'inconclusive',
+      },
+    ],
     sources: [
       { name: 'Reuters Fact Check', url: '#', credibility: 0.95, stance: verdict === 'true' ? 'supports' : 'contradicts' },
       { name: 'AP Verification Desk', url: '#', credibility: 0.92, stance: verdict === 'true' ? 'supports' : 'contradicts' },
@@ -79,12 +89,55 @@ async function postToRealApi(
     headers,
   });
   if (!response.ok) {
-    throw new Error(`Analysis failed (${response.status})`);
+    let detail = '';
+    try {
+      detail = (await response.json())?.error ?? '';
+    } catch {
+    
+    }
+    throw new Error(detail || `Analysis failed (${response.status})`);
   }
   return response.json();
 }
 
+// Downscale + re-encode as JPEG so the request stays under serverless body limits
+// (Vercel: 4.5 MB) and the model gets a sensible resolution.
+async function imageToBase64(file: File, maxSide = 1600): Promise<{ data: string; mediaType: string }> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  return { data: dataUrl.split(',')[1], mediaType: 'image/jpeg' };
+}
+
+async function runRealImagePipeline(file: File, onProgress?: StepCallback): Promise<FactCheckResult> {
+  // One real request, so show the stages as a simple running -> completed sweep.
+  const steps: PipelineStep[] = PIPELINE_STEPS.map((s) => ({ ...s, status: 'pending' }));
+  steps[0].status = 'running';
+  onProgress?.([...steps]);
+
+  const started = Date.now();
+  const { data, mediaType } = await imageToBase64(file);
+  const result = await postToRealApi(
+    'image',
+    JSON.stringify({ image: data, mediaType, fileName: file.name }),
+    { 'Content-Type': 'application/json' }
+  );
+
+  const per = Math.round((Date.now() - started) / steps.length);
+  steps.forEach((s) => {
+    s.status = 'completed';
+    s.durationMs = per;
+  });
+  onProgress?.([...steps]);
+  return { ...result, contentType: 'image', inputLabel: file.name };
+}
+
 export async function analyzeImage(file: File, onProgress?: StepCallback): Promise<FactCheckResult> {
+  if (USE_REAL_IMAGE) return runRealImagePipeline(file, onProgress);
   if (USE_MOCK) return runMockPipeline('image', file.name, onProgress);
   const formData = new FormData();
   formData.append('file', file);
