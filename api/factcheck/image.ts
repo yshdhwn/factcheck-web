@@ -4,8 +4,14 @@
 // Environment variables (set in Vercel, never in frontend code):
 //   GEMINI_API_KEY  (required)  – get one free at https://aistudio.google.com/apikey
 //   GEMINI_MODEL    (optional)  – defaults to gemini-3.8-flash
+//   GEMINI_FALLBACK_MODEL (optional) – used if the main model is overloaded (defaults to gemini-3.5-flash)
+
+declare const process: { env: Record<string, string | undefined> };
 
 const MODEL = process.env.GEMINI_MODEL ?? 'gemini-3.8-flash';
+const FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL ?? 'gemini-3.5-flash';
+const RETRYABLE = [429, 500, 502, 503, 504];
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const PROMPT = `You are a careful image fact-checker. Examine the attached image and decide whether it appears authentic, fake/manipulated, misleading, or cannot be determined.
 
@@ -42,28 +48,40 @@ export default async function handler(req: Req, res: Res) {
     return res.status(400).json({ error: 'Send { image: base64, mediaType: image/jpeg|png|webp }.' });
   }
 
-  let upstream: Response;
-  try {
-    upstream = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-goog-api-key': apiKey,
+  const requestBody = JSON.stringify({
+    contents: [
+      {
+        parts: [{ inline_data: { mime_type: mediaType, data: image } }, { text: PROMPT }],
       },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ inline_data: { mime_type: mediaType, data: image } }, { text: PROMPT }],
-          },
-        ],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          temperature: 0.2,
-          maxOutputTokens: 4096,
-        },
-      }),
-    });
-  } catch {
+    ],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      temperature: 0.2,
+      maxOutputTokens: 4096,
+    },
+  });
+
+  // Free-tier models are sometimes overloaded (503) or rate-limited (429).
+  // Try the main model twice, then the fallback model twice, with short pauses.
+  const attempts = [MODEL, MODEL, FALLBACK_MODEL, FALLBACK_MODEL];
+  let upstream: Response | null = null;
+  for (let i = 0; i < attempts.length; i++) {
+    try {
+      upstream = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${attempts[i]}:generateContent`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
+          body: requestBody,
+        }
+      );
+    } catch {
+      upstream = null;
+    }
+    if (upstream && !RETRYABLE.includes(upstream.status)) break;
+    if (i < attempts.length - 1) await sleep(1200 * (i + 1));
+  }
+  if (!upstream) {
     return res.status(502).json({ error: 'Could not reach the analysis service.' });
   }
 
