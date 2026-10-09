@@ -1,13 +1,5 @@
-/*
-  Design concept: "Docket" reads like a forensic case file rather than a
-  SaaS dashboard. Cool slate paper for the interface chrome; warm manila
-  for the "documents" being examined (uploads, results) — the contrast
-  does double duty as a visual cue for "this is the evidence." Verdicts
-  render as rubber-stamped ink, not colored pills.
-*/
 
 :root {
-  /* Chrome — cool, institutional */
   --slate-950: #171b20;
   --slate-800: #232a36;
   --slate-600: #4b5563;
@@ -15,11 +7,10 @@
   --slate-100: #e7e9e4;
   --paper: #e7e9e4;
 
-  /* Documents — warm manila, the thing being examined */
   --manila: #e6dcc0;
   --manila-edge: #cdbf94;
 
-  /* Ink stamps */
+
   --ink-navy: #232a36;
   --stamp-red: #a13a2b;
   --stamp-teal: #276b5c;
@@ -73,7 +64,6 @@ button {
   padding: 0 28px;
 }
 
-/* ---------- Masthead ---------- */
 
 .masthead {
   border-bottom: 1px solid var(--ink-navy);
@@ -145,8 +135,6 @@ button {
   margin: 0;
 }
 
-/* ---------- Folder / document card ---------- */
-
 .folder {
   background: var(--manila);
   border: 1px solid var(--manila-edge);
@@ -171,7 +159,6 @@ button {
   clip-path: polygon(0 0, 100% 0, 88% 100%, 0 100%);
 }
 
-/* ---------- Tabs ---------- */
 
 .tabset {
   display: flex;
@@ -198,7 +185,6 @@ button {
   color: var(--manila);
 }
 
-/* ---------- Dropzone ---------- */
 
 .dropzone {
   border: 2px dashed var(--slate-600);
@@ -231,7 +217,7 @@ button {
   display: none;
 }
 
-/* ---------- Preview ---------- */
+
 
 .preview {
   display: flex;
@@ -279,7 +265,6 @@ button {
   text-decoration: underline;
 }
 
-/* ---------- URL input ---------- */
 
 .url-field {
   display: flex;
@@ -300,7 +285,6 @@ button {
   outline-offset: -2px;
 }
 
-/* ---------- Analyze button ---------- */
 
 .btn-analyze {
   margin-top: 22px;
@@ -330,7 +314,6 @@ button {
   margin-top: 8px;
 }
 
-/* ---------- Pipeline steps ---------- */
 
 .pipeline {
   margin-top: 40px;
@@ -405,7 +388,6 @@ button {
   color: var(--slate-600);
 }
 
-/* ---------- Result ---------- */
 
 .result {
   margin-top: 40px;
@@ -533,7 +515,7 @@ button {
 .stance--contradicts { color: var(--stamp-red); }
 .stance--neutral { color: var(--slate-600); }
 
-/* ---------- History ---------- */
+
 
 .history-row {
   display: grid;

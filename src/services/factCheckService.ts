@@ -1,10 +1,7 @@
 import type { ContentType, FactCheckResult, HistoryEntry, PipelineStep, Verdict } from '../types/factCheck';
 
-// Swap this for your team's real endpoint. The rest of the app only depends
-// on the analyzeImage / analyzeVideo / analyzeUrl functions below, so
-// changing the transport here doesn't require touching any component.
 const API_BASE = import.meta.env.VITE_FACTCHECK_API ?? '/api/factcheck';
-const USE_MOCK = true; // flip to false once the real API is wired up
+const USE_MOCK = true; 
 
 export const PIPELINE_STEPS: Omit<PipelineStep, 'status'>[] = [
   { id: 'extract', label: 'Claim Extractor', description: 'Identifying the core factual claim' },

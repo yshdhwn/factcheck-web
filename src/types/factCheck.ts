@@ -17,7 +17,7 @@ export interface PipelineStep {
 export interface EvidenceSource {
   name: string;
   url: string;
-  credibility: number; // 0–1
+  credibility: number; 
   stance: 'supports' | 'contradicts' | 'neutral';
 }
 
