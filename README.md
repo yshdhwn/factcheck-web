@@ -26,7 +26,7 @@ npm install
 npm run dev
 ```
 
-Open [link](https://factcheck-web-eta.vercel.app/)
+Open (https://factcheck-web-eta.vercel.app/)
 
 ### Production build
 
